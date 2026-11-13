@@ -90,6 +90,13 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddScoped<IUserEventService, foll_iam.IAM.Infrastructure.Messaging.Outbox.OutboxUserEventService>();
+builder.Services.AddOptions<foll_iam.IAM.Infrastructure.Messaging.Configuration.IntegrationMessagingOptions>()
+    .Bind(builder.Configuration.GetSection("IntegrationMessaging"))
+    .Validate(o => o.PollIntervalSeconds > 0 && o.BatchSize > 0 && o.BatchSize <= 100,
+        "PollIntervalSeconds debe ser positivo y BatchSize debe estar entre 1 y 100.")
+    .ValidateOnStart();
+builder.Services.AddHostedService<foll_iam.IAM.Infrastructure.Messaging.Outbox.OutboxPublisherBackgroundService>();
 
 var app = builder.Build();
 

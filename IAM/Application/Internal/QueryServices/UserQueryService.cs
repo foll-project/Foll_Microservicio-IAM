@@ -8,6 +8,9 @@ namespace foll_iam.IAM.Application.Internal.QueryServices;
 
 public class UserQueryService : IUserQueryService
 {
+    public Task<AccountDeletionRequest?> GetAccountDeletionRequestAsync(long userId) =>
+        _userRepository.FindAccountDeletionRequestByUserIdAsync(userId);
+
     private readonly IUserRepository _userRepository;
     private readonly IHashingService _hashingService;
     private readonly ITokenService _tokenService;

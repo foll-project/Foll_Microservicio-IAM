@@ -2,6 +2,8 @@ using foll_iam.IAM.Domain.Services;
 using foll_iam.IAM.Interfaces.REST.Resources;
 using foll_iam.IAM.Interfaces.REST.Transform;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
  
 namespace foll_iam.IAM.Interfaces.REST;
 
@@ -16,6 +18,37 @@ public class AuthenticationController : ControllerBase
     {
         _userCommandService = userCommandService;
         _userQueryService = userQueryService;
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpDelete]
+    public async Task<IActionResult> RequestAccountDeletion([FromBody] DeleteAccountResource resource)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId) || userId <= 0)
+            return Unauthorized(new { message = "JWT invalido: userId no encontrado." });
+        try
+        {
+            var request = await _userCommandService.Handle(
+                RequestAccountDeletionCommandFromResourceAssembler.ToCommandFromResource(userId, resource));
+            return AcceptedAtAction(nameof(GetAccountDeletionRequest),
+                AccountDeletionResourceFromEntityAssembler.ToResourceFromEntity(request));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet("account-deletion")]
+    public async Task<IActionResult> GetAccountDeletionRequest()
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId) || userId <= 0)
+            return Unauthorized(new { message = "JWT invalido: userId no encontrado." });
+        var request = await _userQueryService.GetAccountDeletionRequestAsync(userId);
+        return request is null
+            ? NotFound(new { message = "No existe una solicitud de eliminacion." })
+            : Ok(AccountDeletionResourceFromEntityAssembler.ToResourceFromEntity(request));
     }
 
     [HttpPost("register")]

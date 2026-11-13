@@ -10,6 +10,8 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<AccountDeletionRequest> AccountDeletionRequests { get; set; }
+    public DbSet<foll_iam.IAM.Infrastructure.Messaging.Outbox.IntegrationOutboxMessage> IntegrationOutboxMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

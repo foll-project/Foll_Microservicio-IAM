@@ -1,1 +1,11 @@
-{"Version":1,"Hash":"fXeMxw1gFPRvpLCAlckxYoSShiW3FN9jNZ/zjAEwmYw=","Source":"Foll-IAM","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}
+{
+  "Version": 1,
+  "Hash": "usWxH2mzZUoJZ/IIySa/TqxXGnfPcj++U2aPnbVAHhg=",
+  "Source": "Foll-IAM",
+  "BasePath": "_content/Foll-IAM",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

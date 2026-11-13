@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Foll-IAM")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce68a8c6f5db3ea601d6833256689b04480917de")]
 [assembly: System.Reflection.AssemblyProductAttribute("Foll-IAM")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Foll-IAM")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

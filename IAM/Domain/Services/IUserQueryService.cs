@@ -8,4 +8,5 @@ public interface IUserQueryService
     Task<(User user, string token)?> AuthenticateAsync(LoginQuery query);
 
     Task<User?> GetUserInfoByIdAsync(long userId);
+    Task<AccountDeletionRequest?> GetAccountDeletionRequestAsync(long userId);
 }

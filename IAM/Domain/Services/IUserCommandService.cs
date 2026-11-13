@@ -5,4 +5,5 @@ namespace foll_iam.IAM.Domain.Services;
 public interface IUserCommandService
 {
     Task Handle(RegisterCommand command);
+    Task<foll_iam.IAM.Domain.Model.Entities.AccountDeletionRequest> Handle(RequestAccountDeletionCommand command);
 }

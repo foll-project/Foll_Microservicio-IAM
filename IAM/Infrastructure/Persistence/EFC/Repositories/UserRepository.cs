@@ -8,6 +8,12 @@ namespace foll_iam.IAM.Infrastructure.Persistence.EFC.Repositories;
 
 public class UserRepository : BaseRepository<User>, IUserRepository
 {
+    public Task<AccountDeletionRequest?> FindAccountDeletionRequestByUserIdAsync(long userId) =>
+        Context.AccountDeletionRequests.AsNoTracking().SingleOrDefaultAsync(r => r.UserId == userId);
+
+    public async Task AddAccountDeletionRequestAsync(AccountDeletionRequest request) =>
+        await Context.AccountDeletionRequests.AddAsync(request);
+
     public UserRepository(AppDbContext context) : base(context)
     {
     }
