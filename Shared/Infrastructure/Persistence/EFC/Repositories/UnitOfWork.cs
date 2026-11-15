@@ -9,5 +9,15 @@ public class UnitOfWork : IUnitOfWork
 
     public UnitOfWork(AppDbContext context) => _context = context;
 
-    public async Task CompleteAsync() => await _context.SaveChangesAsync();
+    public async Task CompleteAsync()
+    {
+        try { await _context.SaveChangesAsync(); }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (
+            ex.InnerException is Npgsql.PostgresException
+            { SqlState: "23505", ConstraintName: "ix_account_deletion_requests_user_id" })
+        {
+            _context.ChangeTracker.Clear();
+            throw new foll_iam.IAM.Domain.Exceptions.AccountDeletionConflictException(ex);
+        }
+    }
 }

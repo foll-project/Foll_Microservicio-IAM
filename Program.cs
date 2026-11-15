@@ -49,6 +49,11 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Pegue SOLO el JWT, sin escribir Bearer."
     });
 
+    options.AddSecurityDefinition("BackgroundQueryKey", new OpenApiSecurityScheme
+    {
+        Name = "X-Foll-Service-Key", Type = SecuritySchemeType.ApiKey, In = ParameterLocation.Header,
+        Description = "Consulta de contexto sin sesión de usuario (worker/enlace público)."
+    });
     options.OperationFilter<AuthorizeOperationFilter>();
 });
 
@@ -90,7 +95,30 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddScoped<IUserEventService, foll_iam.IAM.Infrastructure.Messaging.Outbox.OutboxUserEventService>();
+builder.Services.AddOptions<foll_iam.IAM.Infrastructure.Messaging.Configuration.IntegrationMessagingOptions>()
+    .Bind(builder.Configuration.GetSection("IntegrationMessaging"))
+    .Validate(o => o.PollIntervalSeconds > 0 && o.BatchSize > 0 && o.BatchSize <= 100,
+        "PollIntervalSeconds debe ser positivo y BatchSize debe estar entre 1 y 100.")
+    .ValidateOnStart();
+builder.Services.AddHostedService<foll_iam.IAM.Infrastructure.Messaging.Outbox.OutboxPublisherBackgroundService>();
 
+builder.Services.AddOptions<foll_iam.IAM.Infrastructure.Messaging.Configuration.RabbitMqOptions>()
+    .Bind(builder.Configuration.GetSection("RabbitMq"))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.HostName) && o.Port > 0 && o.Port <= 65535 &&
+        !string.IsNullOrWhiteSpace(o.UserName) && !string.IsNullOrWhiteSpace(o.Password) &&
+        !string.IsNullOrWhiteSpace(o.VirtualHost) && !string.IsNullOrWhiteSpace(o.ExchangeName) &&
+        !string.IsNullOrWhiteSpace(o.QueueName) && o.PublishTimeoutSeconds > 0 && o.PublishTimeoutSeconds <= 120,
+        "Configuracion RabbitMq incompleta o invalida.")
+    .ValidateOnStart();
+builder.Services.AddSingleton<foll_iam.IAM.Infrastructure.Messaging.RabbitMq.RabbitMqConnection>(sp => new(
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<foll_iam.IAM.Infrastructure.Messaging.Configuration.RabbitMqOptions>>(),
+    new[] { foll_iam.IAM.Application.IntegrationEvents.AccountDeletionRequestedIntegrationEvent.EventType },
+    sp.GetRequiredService<ILogger<foll_iam.IAM.Infrastructure.Messaging.RabbitMq.RabbitMqConnection>>()));
+builder.Services.AddSingleton<foll_iam.IAM.Application.OutboundServices.IIntegrationEventPublisher,
+    foll_iam.IAM.Infrastructure.Messaging.RabbitMq.RabbitMqIntegrationEventPublisher>();
+
+foll_iam.Shared.Infrastructure.Messaging.IntegrationConsumerRegistration.AddIntegrationConsumer<foll_iam.Shared.Infrastructure.Messaging.AccountDeletionCompletedHandler>(builder.Services, builder.Configuration, "iam.care-account-deletion-completed.v1", foll_iam.Shared.Infrastructure.Messaging.AccountDeletionCompleted.EventType);
 var app = builder.Build();
 
 var applyMigrations = builder.Configuration.GetValue<bool>("ApplyMigrationsOnStartup", true);

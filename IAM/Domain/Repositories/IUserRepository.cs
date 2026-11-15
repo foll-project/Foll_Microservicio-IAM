@@ -7,6 +7,8 @@ public interface IUserRepository : IBaseRepository<User>
 {
     Task<bool> ExistsByEmailAsync(string email);
     Task<User?> FindByEmailAsync(string email);
+    Task<AccountDeletionRequest?> FindAccountDeletionRequestByUserIdAsync(long userId);
+    Task AddAccountDeletionRequestAsync(AccountDeletionRequest request);
 }
 
 // ..

@@ -1,0 +1,5 @@
+.tools/
+tests/**/bin/
+tests/**/obj/
+**/bin/
+**/obj/
