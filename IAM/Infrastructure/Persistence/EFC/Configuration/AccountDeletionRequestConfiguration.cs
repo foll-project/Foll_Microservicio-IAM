@@ -13,6 +13,6 @@ public class AccountDeletionRequestConfiguration : IEntityTypeConfiguration<Acco
         builder.Property(r => r.OperationId).ValueGeneratedNever();
         builder.Property(r => r.Status).HasConversion<string>().HasMaxLength(40).IsRequired();
         builder.HasIndex(r => r.UserId).IsUnique();
-        builder.HasOne<User>().WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Restrict);
+        // Keep the operation history after deleting the account. UserId is a historical reference.
     }
 }

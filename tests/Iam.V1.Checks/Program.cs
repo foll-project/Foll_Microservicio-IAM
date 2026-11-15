@@ -97,6 +97,14 @@ await disabled.StopAsync(default);
 Check(true, "disabled publication needs neither transport nor database access");
 using var enabled = new OutboxPublisherBackgroundService(provider.GetRequiredService<IServiceScopeFactory>(), Options.Create(new IntegrationMessagingOptions { Enabled = true }), NullLogger<OutboxPublisherBackgroundService>.Instance);
 await Throws<InvalidOperationException>(() => enabled.StartAsync(default), "enabling publication without adapter fails explicitly");
+var recipientController = new foll_iam.IAM.Interfaces.Internal.NotificationRecipientController(new UserQueryService(users, hashing, new FakeTokens()));
+Check(await recipientController.Get(0) is NotFoundResult, "notification recipient rejects invalid identity");
+var recipientResponse = await recipientController.Get(1) as OkObjectResult;
+Check(recipientResponse is not null, "notification recipient reads existing IAM user");
+var recipientJson = JsonSerializer.SerializeToElement(recipientResponse!.Value);
+Check(recipientJson.TryGetProperty("FirstName", out _) && recipientJson.TryGetProperty("LastName", out _) && recipientJson.TryGetProperty("PhoneNumber", out _) &&
+    !recipientJson.TryGetProperty("PasswordHash", out _) && !recipientJson.TryGetProperty("Email", out _), "notification recipient exposes only minimal contact fields");
+if (args.Contains("--rabbitmq")) await RabbitMqChecks.RunAsync(Check);
 Console.WriteLine($"{count} checks passed.");
 
 sealed class FakeUsers : IUserRepository

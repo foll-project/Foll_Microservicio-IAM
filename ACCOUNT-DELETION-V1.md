@@ -1,3 +1,5 @@
+> Actualizacion: el flujo ahora incluye consumidores de Care, IAM y Devices, y termina en Completed. La descripcion V1 de abajo documenta la etapa original; consultar [el flujo vigente](docs/rabbitmq-consumers.md).
+
 # Eliminacion de cuenta — V1
 
 Esta version registra una solicitud y su evento de integracion. No elimina ni bloquea
@@ -65,13 +67,21 @@ El adaptador debe:
 
 ## Activacion
 
-`IntegrationMessaging:Enabled` es `false` por defecto. El worker informa que esta
-deshabilitado y no modifica los mensajes. No existe un publicador falso ni una llamada
-HTTP provisional. Sin broker, el estado permanece `PendingPublication`.
+`IntegrationMessaging:Enabled` esta configurado en `true` para el broker local.
+RabbitMqIntegrationEventPublisher implementa IIntegrationEventPublisher y esta
+registrado en DI. Publica JSON persistente con publisher confirms y mandatory.
+Puede deshabilitarse IntegrationMessaging para conservar mensajes pendientes.
+Si falla la conexion, autenticacion o publicacion, el outbox conserva el mensaje
+y programa reintentos. No se simula una publicacion exitosa.
 
-Cuando exista el adaptador, registrar su implementacion de `IIntegrationEventPublisher`
-en DI y habilitar `IntegrationMessaging`. Habilitarlo sin adaptador hace fallar el arranque
-explicitamente. `PollIntervalSeconds` y `BatchSize` controlan el procesamiento.
+Exchange: `foll.integration` (topic durable).
+Cola: `care.account-deletion-requested.v1` (durable).
+Routing key: `iam.account-deletion-requested.v1`.
+La cola se declara y vincula al establecer la primera publicacion. Todavia no
+hay consumidor de Care ni confirmaciones de negocio. Publisher confirms solo
+permite avanzar a WaitingForConfirmations, nunca significa cuenta eliminada.
+
+Ver `docs/rabbitmq-publication.md` para configuracion y pruebas del transporte.
 
 El worker reclama un lote mediante `FOR UPDATE SKIP LOCKED` para permitir replicas.
 Mantiene la transaccion del lote durante los envios, por lo que conviene usar lotes
@@ -93,5 +103,5 @@ dotnet run --project tests/Iam.V1.Checks/Iam.V1.Checks.csproj
 
 Es un ejecutable de comprobaciones sin paquetes de test adicionales. Comprueba reglas,
 servicios, contrato, configuracion EF, SQL de migraciones y controles del worker/API.
-No conecta a PostgreSQL ni a un broker; no reemplaza pruebas de integracion reales de
+Sin argumentos no conecta a PostgreSQL ni al broker. Con --rabbitmq agrega pruebas reales de publicacion en recursos aislados. No reemplaza pruebas de
 transacciones, concurrencia y entrega cuando se conecte el transporte.
